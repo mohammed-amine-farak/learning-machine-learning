@@ -31,13 +31,13 @@ for epoch in range(epochs):
         error = house["price"] - prediction
 
         predictions.append(prediction)
-        errors.append(error)
+        errors.append(error) 
         errorpower2.append(error ** 2)
 
         house_error_list.append(house["size"] * error)
         bias_error_list.append(error)
 
-    # Loss
+    # Lossklnl
     mse = sum(errorpower2) / len(houses)
 
     # Gradients
