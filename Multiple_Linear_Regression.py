@@ -1,89 +1,94 @@
-houses = [
-    {"size": 55,  "rooms": 2, "age": 18, "distance": 12, "price": 135000},
-    {"size": 70,  "rooms": 3, "age": 15, "distance": 10, "price": 165000},
-    {"size": 85,  "rooms": 3, "age": 12, "distance": 8,  "price": 195000},
-    {"size": 100, "rooms": 4, "age": 10, "distance": 7,  "price": 225000},
-    {"size": 115, "rooms": 4, "age": 8,  "distance": 6,  "price": 255000},
-    {"size": 130, "rooms": 5, "age": 6,  "distance": 5,  "price": 290000},
-    {"size": 145, "rooms": 5, "age": 4,  "distance": 4,  "price": 325000},
-    {"size": 160, "rooms": 6, "age": 2,  "distance": 3,  "price": 360000},
-]
+import numpy as np
+import matplotlib.pyplot as plt
 
-# Initial weights
-W_size = 0
-W_rooms = 0
-W_age = 0
-W_distance = 0
-b = 0
+# ==========================
+# Training Data
+# ==========================
 
-learning_rate = 0.000001
-epochs = 1000
+X = np.array([
+    [55, 2, 18, 12],
+    [70, 3, 15, 10],
+    [85, 3, 12, 8],
+    [100, 4, 10, 7]
+], dtype=float)
+
+y_true = np.array([
+    135000,
+    165000,
+    195000,
+    225000
+], dtype=float)
+
+# ==========================
+# Initial Weights
+# ==========================
+
+W = np.random.randn(4) * 0.01
+
+b = 10000
+
+learning_rate = 0.01
+epochs = 10000
+
+X_scaled = (X - np.min(X, axis=0)) / (np.max(X, axis=0) - np.min(X, axis=0))
+
+print(X_scaled)
+# ==========================
+# Training
+# ==========================
 
 for epoch in range(epochs):
 
-    size_gradient_list = []
-    rooms_gradient_list = []
-    age_gradient_list = []
-    distance_gradient_list = []
-    bias_gradient_list = []
-    squared_errors = []
+    # Prediction
+    predictions = X_scaled @ W + b
 
-    for house in houses:
+    # Error
+    errors = y_true - predictions
 
-        # Prediction
-        prediction = (
-            house["size"] * W_size +
-            house["rooms"] * W_rooms +
-            house["age"] * W_age +
-            house["distance"] * W_distance +
-            b
-        )
+    # Mean Squared Error
+    mse = np.mean(errors ** 2)
 
-        # Error
-        error = house["price"] - prediction
+    # Gradient of W
+    gradient_W = (-2 / len(X_scaled)) * (X_scaled.T @ errors)
 
-        # MSE
-        squared_errors.append(error ** 2)
-
-        # Gradients
-        size_gradient_list.append(house["size"] * error)
-        rooms_gradient_list.append(house["rooms"] * error)
-        age_gradient_list.append(house["age"] * error)
-        distance_gradient_list.append(house["distance"] * error)
-        bias_gradient_list.append(error)
-
-    n = len(houses)
-
-    mse = sum(squared_errors) / n
-
-    gradient_size = (-2 / n) * sum(size_gradient_list)
-    gradient_rooms = (-2 / n) * sum(rooms_gradient_list)
-    gradient_age = (-2 / n) * sum(age_gradient_list)
-    gradient_distance = (-2 / n) * sum(distance_gradient_list)
-    gradient_b = (-2 / n) * sum(bias_gradient_list)
+    # Gradient of b
+    gradient_b = (-2 / len(X_scaled)) * np.sum(errors)
 
     # Update weights
-    W_size = W_size - learning_rate * gradient_size
-    W_rooms = W_rooms - learning_rate * gradient_rooms
-    W_age = W_age - learning_rate * gradient_age
-    W_distance = W_distance - learning_rate * gradient_distance
+    W = W - learning_rate * gradient_W
+
+    # Update bias
     b = b - learning_rate * gradient_b
 
-    if epoch % 100 == 0:
-        print(f"Epoch: {epoch}")
-        print(f"MSE: {mse:.2f}")
-        print(f"W_size = {W_size:.4f}")
-        print(f"W_rooms = {W_rooms:.4f}")
-        print(f"W_age = {W_age:.4f}")
-        print(f"W_distance = {W_distance:.4f}")
-        print(f"b = {b:.4f}")
-        print("-" * 40)
+    # Print every 1000 epochs
+    if epoch % 1000 == 0:
+        print(f"Epoch {epoch}")
+        print("MSE =", mse)
+        print("W =", W)
+        print("b =", b)
+        print("---------------------")
 
-print("\nTraining Finished\n")
+# ==========================
+# Final Results
+# ==========================
 
-print("Final Weights")
-print("W_size =", W_size)
-print("W_rooms =", W_rooms)
-print("W_age =", W_age)
-print("W_distance =", W_distance)
-print("b =", b)
+print("\nFinal Weights:")
+print(W)
+new_house = np.array([
+    90,
+    3,
+    9,
+    7
+], dtype=float)
+
+new_house_scaled = (new_house - np.min(X, axis=0)) / (np.max(X, axis=0) - np.min(X, axis=0))
+prediction = new_house_scaled @ W + b
+print(prediction)
+print("\nFinal Bias:")
+print(b)
+
+print("\nPredictions:")
+print(predictions)
+
+print("\nFinal MSE:")
+print(mse)
