@@ -1,0 +1,57 @@
+from pathlib import Path
+import pypandoc
+
+text = r"""Machine Learning Functions Learned
+
+NumPy
+- np.array()
+- np.min(X, axis=0)
+- np.max(X, axis=0)
+- np.mean()
+- np.sum()
+- np.exp()
+- np.log()
+- np.random.randn()
+- X.shape
+- X.T
+- Matrix multiplication: X @ W
+
+Feature Scaling
+X_scaled = (X - X_min) / (X_max - X_min)
+
+Linear Regression
+z = X @ W + b
+errors = predictions - y
+MSE = np.mean(errors**2)
+gradient_W = (2/m) * (X.T @ errors)
+gradient_b = (2/m) * np.sum(errors)
+W = W - learning_rate * gradient_W
+b = b - learning_rate * gradient_b
+
+Sigmoid
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+Logistic Regression
+z = X @ W + b
+predictions = sigmoid(z)
+
+Cross Entropy
+loss = -np.mean(
+    y * np.log(predictions + 1e-10) +
+    (1-y) * np.log(1-predictions + 1e-10)
+)
+
+Logistic Gradient
+gradient_W = (X.T @ (predictions - y)) / m
+gradient_b = np.mean(predictions - y)
+
+Prediction
+prediction = (probability >= 0.5).astype(int)
+
+Accuracy
+accuracy = np.mean(prediction == y) * 100
+"""
+out="/mnt/data/ML_Functions_Summary.txt"
+pypandoc.convert_text(text,'plain',format='md',outputfile=out,extra_args=['--standalone'])
+print(out)
