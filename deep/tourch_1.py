@@ -1,33 +1,147 @@
 import torch
-import numpy as np
+import torch.nn as nn
+import torch.nn.functional as F
 import pandas as pd
-df = pd.read_csv("svt_dataset_10000.csv")
-df["gender"] = df["gender"].map({
-    "Male": 0,
-    "Female": 1
-})
-X = torch.tensor([
-    [22., 190., 9., 98.],
-    [45., 170., 8., 97.],
-    [30., 80., 2., 99.],
-     [30., 80., 2., 99.]
-], dtype=torch.float32)
-print(X.dim())
-y = torch.randn(4,5)
-b = X@y
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 
-A = torch.rand(5,4)
+# ==========================
+# Build Model
+# ==========================
 
-B = torch.rand(5)
+class Model(nn.Module):
 
-C = A + B
+    def __init__(self, in_feature=4, h1=8, h2=9, out_feature=3):
+        super().__init__()
 
-#if you want only own number
-#x = torch.tensor(5)
-#if you want a lot of number
+        self.fc1 = nn.Linear(in_feature, h1)
+        self.fc2 = nn.Linear(h1, h2)
+        self.out = nn.Linear(h2, out_feature)
 
+    def forward(self, x):
+
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.out(x)
+
+        return x
 
 
-print(C)
+# ==========================
+# Random Seed
+# ==========================
 
+torch.manual_seed(41)
 
+model = Model()
+
+# ==========================
+# Load Dataset
+# ==========================
+
+url = "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/0e7a9b0a5d22642a06d3d5b9bcbad9890c8ee534/iris.csv"
+
+my_df = pd.read_csv(url)
+
+# Convert labels to integers
+my_df["species"] = my_df["species"].map({
+    "setosa": 0,
+    "versicolor": 1,
+    "virginica": 2
+}).astype(int)
+
+# ==========================
+# Features & Labels
+# ==========================
+
+X = my_df.drop("species", axis=1).values
+y = my_df["species"].values
+
+# ==========================
+# Train/Test Split
+# ==========================
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=41
+)
+
+# ==========================
+# Convert to Tensor
+# ==========================
+
+X_train = torch.FloatTensor(X_train)
+X_test = torch.FloatTensor(X_test)
+
+y_train = torch.LongTensor(y_train)
+y_test = torch.LongTensor(y_test)
+
+# ==========================
+# Loss Function
+# ==========================
+
+criterion = nn.CrossEntropyLoss()
+
+# ==========================
+# Optimizer
+# ==========================
+
+optimizer = torch.optim.Adam(
+    model.parameters(),
+    lr=0.01
+)
+
+# ==========================
+# Training
+# ==========================
+
+epochs = 1000
+
+losses = []
+
+for epoch in range(epochs):
+
+    # Forward
+    y_pred = model(X_train)
+
+    # Calculate Loss
+    loss = criterion(y_pred, y_train)
+
+    losses.append(loss.item())
+
+    # Print Loss
+    if epoch % 10 == 0:
+        print(f"Epoch {epoch:3d} | Loss = {loss.item():.4f}")
+
+    # Backpropagation
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+# ==========================
+# Plot Loss
+# ==========================
+
+plt.plot(losses)
+plt.title("Training Loss")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.show()
+
+# ==========================
+# Test Accuracy
+# ==========================
+
+with torch.no_grad():
+
+    y_eval = model(X_test)
+
+    predicted = torch.argmax(y_eval, dim=1)
+
+    correct = (predicted == y_test).sum().item()
+
+    accuracy = correct / len(y_test)
+
+print(f"\nAccuracy = {accuracy * 100:.2f}%")
