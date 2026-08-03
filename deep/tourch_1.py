@@ -31,7 +31,7 @@ class Model(nn.Module):
 # Random Seed
 # ==========================
 
-torch.manual_seed(41)
+torch.manual_seed(32)
 
 model = Model()
 
@@ -65,7 +65,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
     test_size=0.2,
-    random_state=41
+    random_state=32
 )
 
 # ==========================
@@ -98,7 +98,6 @@ optimizer = torch.optim.Adam(
 # ==========================
 
 epochs = 1000
-
 losses = []
 
 for epoch in range(epochs):
@@ -111,9 +110,8 @@ for epoch in range(epochs):
 
     losses.append(loss.item())
 
-    # Print Loss
-    if epoch % 10 == 0:
-        print(f"Epoch {epoch:3d} | Loss = {loss.item():.4f}")
+    if epoch % 100 == 0:
+        print(f"Epoch {epoch:4d} | Loss = {loss.item():.4f}")
 
     # Backpropagation
     optimizer.zero_grad()
@@ -145,3 +143,26 @@ with torch.no_grad():
     accuracy = correct / len(y_test)
 
 print(f"\nAccuracy = {accuracy * 100:.2f}%")
+
+# ==========================
+# Predict One Flower
+# ==========================
+
+# One flower (must have shape [1,4])
+test = torch.FloatTensor([[5.7,3.0,4.2,1.2]])
+
+classes = ["Setosa", "Versicolor", "Virginica"]
+
+model.eval()
+
+with torch.no_grad():
+
+    output = model(test)
+
+    print("\nRaw Output:")
+    print(output)
+
+    prediction = torch.argmax(output, dim=1)
+
+    print("\nPredicted Class Number:", prediction.item())
+    print("Predicted Flower:", classes[prediction.item()])
